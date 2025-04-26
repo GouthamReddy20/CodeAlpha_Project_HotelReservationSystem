@@ -1,0 +1,234 @@
+/*
+This is the complete source code for Hotel Reservation System
+*/
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class HotelReservationSystem {
+
+    // ======= Room Class =======
+    static class Room {
+        private int roomNumber;
+        private String roomType;
+        private boolean isBooked;
+
+        public Room(int roomNumber, String roomType) {
+            this.roomNumber = roomNumber;
+            this.roomType = roomType;
+            this.isBooked = false;
+        }
+
+        public int getRoomNumber() {
+            return roomNumber;
+        }
+
+        public String getRoomType() {
+            return roomType;
+        }
+
+        public boolean isBooked() {
+            return isBooked;
+        }
+
+        public void bookRoom() {
+            this.isBooked = true;
+        }
+    }
+
+    // ======= Customer Class =======
+    static class Customer {
+        private String name;
+        private String email;
+
+        public Customer(String name, String email) {
+            this.name = name;
+            this.email = email;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+    }
+
+    // ======= Booking Class =======
+    static class Booking {
+        private Customer customer;
+        private Room room;
+
+        public Booking(Customer customer, Room room) {
+            this.customer = customer;
+            this.room = room;
+        }
+
+        public Customer getCustomer() {
+            return customer;
+        }
+
+        public Room getRoom() {
+            return room;
+        }
+    }
+
+    // ======= Payment Processor Class =======
+    static class PaymentProcessor {
+        public static boolean processPayment(String cardNumber, String nameOnCard, String expiryDate, String cvv) {
+            return cvv.matches("\\d{3}");
+        }
+    }
+
+    // ======= Hotel Class =======
+    static class Hotel {
+        private List<Room> rooms = new ArrayList<>();
+        private List<Booking> bookings = new ArrayList<>();
+
+        public void addRoom(Room room) {
+            rooms.add(room);
+        }
+
+        public List<Room> getAvailableRooms() {
+            List<Room> available = new ArrayList<>();
+            for (Room room : rooms) {
+                if (!room.isBooked()) {
+                    available.add(room);
+                }
+            }
+            return available;
+        }
+
+        public Booking makeBooking(Customer customer, Room room) {
+            room.bookRoom();
+            Booking booking = new Booking(customer, room);
+            bookings.add(booking);
+            return booking;
+        }
+    }
+
+    // ======= Main Method =======
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        Hotel hotel = new Hotel();
+
+        hotel.addRoom(new Room(101, "Single"));
+        hotel.addRoom(new Room(102, "Double"));
+        hotel.addRoom(new Room(103, "Suite"));
+
+        System.out.println("Welcome to the Hotel Reservation System!");
+
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+
+        String email = "";
+        boolean validEmail = false;
+        while (!validEmail) {
+            System.out.print("Enter your email: ");
+            email = scanner.nextLine();
+            if (isValidEmail(email)) {
+                validEmail = true;
+            } else {
+                System.out.println("Invalid email format. Please enter a valid email.");
+            }
+        }
+
+        Customer customer = new Customer(name, email);
+
+        while (true) {
+            System.out.println("\nAvailable Rooms:");
+            List<Room> availableRooms = hotel.getAvailableRooms();
+            if (availableRooms.isEmpty()) {
+                System.out.println("No rooms available. Thank you for visiting!");
+                break;
+            }
+
+            for (int i = 0; i < availableRooms.size(); i++) {
+                Room room = availableRooms.get(i);
+                System.out.println((i + 1) + ". Room " + room.getRoomNumber() + " - " + room.getRoomType());
+            }
+
+            System.out.print("Select a room by number (e.g., 1, 2, 3) or 0 to exit: ");
+            int roomChoice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+
+            if (roomChoice == 0) {
+                System.out.println("Exiting...");
+                break;
+            }
+
+            if (roomChoice < 1 || roomChoice > availableRooms.size()) {
+                System.out.println("Invalid choice. Please try again.");
+                continue;
+            }
+
+            Room selectedRoom = availableRooms.get(roomChoice - 1);
+            hotel.makeBooking(customer, selectedRoom);
+
+            System.out.println("\nBooking Confirmed!");
+            System.out.println("Customer: " + customer.getName() + ", Email: " + customer.getEmail());
+            System.out.println("Room Number: " + selectedRoom.getRoomNumber() + ", Type: " + selectedRoom.getRoomType());
+
+            System.out.println("\n---- Payment Section ----");
+            System.out.println("Choose Payment Method:");
+            System.out.println("1. Credit Card");
+            System.out.println("2. Debit Card");
+            System.out.println("3. UPI");
+            System.out.println("4. Net Banking");
+            System.out.println("5. Cash on Delivery");
+
+            System.out.print("Enter your choice (1-5): ");
+            int paymentChoice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+
+            String paymentMethod = "";
+
+            switch (paymentChoice) {
+                case 1:
+                    paymentMethod = "Credit Card";
+                    break;
+                case 2:
+                    paymentMethod = "Debit Card";
+                    break;
+                case 3:
+                    paymentMethod = "UPI";
+                    break;
+                case 4:
+                    paymentMethod = "Net Banking";
+                    break;
+                case 5:
+                    paymentMethod = "Cash on Delivery";
+                    break;
+                default:
+                    System.out.println("Invalid payment method selected. Exiting...");
+                    return;
+            }
+
+            System.out.println("\nPayment Successful using " + paymentMethod + "!");
+            System.out.println("Thank you for booking with us!");
+
+            System.out.print("\nDo you want to make another booking? (yes/no): ");
+            String again = scanner.nextLine();
+            if (again.equalsIgnoreCase("no")) {
+                System.out.println("Thank you for using the Hotel Reservation System! Exiting...");
+                break;
+            }
+        }
+
+        scanner.close();
+    }
+
+    // Email Validation Method
+    public static boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+}
+
